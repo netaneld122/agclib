@@ -114,7 +114,7 @@ void doit()
 	}
 
 	// Restore the microphone volume as it was before the test
-	printf("Restoring previous microphone volume (->%.2f)", micVolumeBeforeTest);
+	printf("Restoring previous microphone volume (->%.2f)\n", micVolumeBeforeTest);
 	micController.setVolume(static_cast<float>(micVolumeBeforeTest));
 
 	// Stop recording
