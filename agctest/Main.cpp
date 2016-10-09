@@ -56,7 +56,7 @@ void mmcheck(MMRESULT result)
 
 const unsigned int SAMPLING_RATE = 32000; // 32kHz
 const Channels CHANNELS = MONO;
-const unsigned int TIMEOUT_IN_SECONDS = 60;
+const unsigned int TIMEOUT_IN_SECONDS = 30;
 
 void doit()
 {
@@ -83,6 +83,11 @@ void doit()
 	agc::Com com;
 	agc::MicrophoneController micController;
 
+	// Save values later to be restored
+	double micVolumeBeforeTest = micController.getVolume();
+
+	std::cout << "Recording for " << TIMEOUT_IN_SECONDS << " seconds" << std::endl;
+
 	// Record for some time
 	int timeout = 1000 * TIMEOUT_IN_SECONDS;
 	while (timeout >= 0) {
@@ -107,6 +112,10 @@ void doit()
 		Sleep(20);
 		timeout -= 20;
 	}
+
+	// Restore the microphone volume as it was before the test
+	printf("Restoring volume to be %.2f", micVolumeBeforeTest);
+	micController.setVolume(static_cast<float>(micVolumeBeforeTest));
 
 	// Stop recording
 	mmcheck(waveInStop(waveHandle));
