@@ -2,8 +2,12 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="WeightedEvaluator.h" />
+    <ClInclude Include="MicrophoneController.h" />
+    <ClInclude Include="Com.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WeightedEvaluator.cpp" />
+    <ClCompile Include="MicrophoneController.cpp" />
+    <ClCompile Include="Com.cpp" />
   </ItemGroup>
 </Project>

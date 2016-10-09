@@ -9,8 +9,11 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <algorithm>
 
+#include "Com.h"
 #include "WeightedEvaluator.h"
+#include "MicrophoneController.h"
 
 enum Channels
 {
@@ -62,7 +65,7 @@ double calculateRMS(const std::vector<char>& pcm)
 	return std::sqrt(sum / numberOfSamples);
 }
 
-inline double convertRMStoDecibel(double rms)
+inline double RMStoDecibel(double rms)
 {
 	return 20 * std::log10(rms) + 20;
 }
@@ -77,12 +80,31 @@ double calculatePeakAmplitude(const std::vector<char>& pcm)
 			peak = sample;
 		}
 	}
-	return peak / (1 << 15); // Normalize to 0-100 scale
+	return peak / (1 << 15); // Normalize to 0-1 scale
 }
 
 const unsigned int SAMPLING_RATE = 32000; // 32kHz
 const Channels CHANNELS = MONO;
 const unsigned int TIMEOUT_IN_SECONDS = 30;
+
+double evaluateAmplitude(const std::list<double>& amplitudes)
+{
+	double sum = std::accumulate(amplitudes.begin(), amplitudes.end(), static_cast<double>(0));
+	double average = sum / amplitudes.size();
+	return average;
+}
+
+double evaluateMicVolume(const std::list<double>& amplitudes)
+{
+	double favorNewFactor = 0.3;
+	double volume = 0;
+	for (auto& amp : amplitudes) {
+		volume = (1 - favorNewFactor) * volume + favorNewFactor * amp;
+	}
+	
+	// Microphone volume should be the amplitude inverse to compensate
+	return 1 - volume;
+}
 
 void doit()
 {
@@ -104,18 +126,33 @@ void doit()
 	// Start recording
 	mmcheck(waveInStart(waveHandle));
 
-	agc::WeightedEvaluator<double, double> evaluator(5, [](const std::list<double>& amplitudes) {
-		return 100 - (std::accumulate(amplitudes.begin(), amplitudes.end(), 0) / amplitudes.size());
-	});
+	// AGC
+	agc::WeightedEvaluator<double, double> amplitudeEvaluator(5, &evaluateAmplitude);
+	agc::WeightedEvaluator<double, double> microphoneVolumeEvaluator(20, &evaluateMicVolume);
+
+	agc::Com com;
+	agc::MicrophoneController micController;
 
 	// Record for some time
 	int timeout = 1000 * TIMEOUT_IN_SECONDS;
 	while (timeout >= 0) {
 		if (waveHeader.dwFlags & WHDR_DONE) {
-			double peakAmplitude = calculatePeakAmplitude(pcm) * 100;
-			double evaluation = evaluator.addValue(peakAmplitude);
-			printf("%.2f%%\t%.2f\n", peakAmplitude, evaluation);
-			//std::cout << convertRMStoDecibel(calculateRMS(pcm)) << "dB" << std::endl;
+
+			// AGC
+			double peakAmplitude = calculatePeakAmplitude(pcm);
+			double amplitudeEvaluation = amplitudeEvaluator.addValue(peakAmplitude);
+			double micVolumeEvaluation = microphoneVolumeEvaluator.addValue(amplitudeEvaluation);
+			printf("%.2f%%\t%.2f\t%.2f", peakAmplitude * 100, amplitudeEvaluation * 100, micVolumeEvaluation * 100);
+
+			double currentMicVolume = micController.getVolume();
+			if (micVolumeEvaluation < currentMicVolume) {
+				printf("\t\t%.2f -> %.2f", currentMicVolume, micVolumeEvaluation);
+				micController.setVolume(static_cast<float>(micVolumeEvaluation));
+				currentMicVolume = micVolumeEvaluation;
+			}
+			std::cout << std::endl;
+			
+			// Prepare buffers again
 			mmcheck(waveInPrepareHeader(waveHandle, &waveHeader, sizeof(WAVEHDR)));
 			mmcheck(waveInAddBuffer(waveHandle, &waveHeader, sizeof(WAVEHDR)));
 		}

@@ -20,7 +20,7 @@ public:
 private:
 	size_t m_capacity;
 	std::list<T> m_history;
-	std::function<void(T)> m_evaluator;
+	std::function<S(const std::list<T>&)> m_evaluator;
 };
 
 template <typename T, typename S>
