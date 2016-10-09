@@ -16,6 +16,9 @@ public:
 	{ }
 };
 
+/**
+	Scoped COM Library initializer
+*/
 class Com
 {
 public:

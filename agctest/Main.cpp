@@ -53,23 +53,6 @@ void mmcheck(MMRESULT result)
 	}
 }
 
-double calculateRMS(const std::vector<char>& pcm)
-{
-	size_t numberOfSamples = pcm.size() / sizeof(short);
-	double sum = 0;
-	for (size_t i = 0; i < numberOfSamples; i += sizeof(short)) {
-		short sample = *reinterpret_cast<const short*>(&pcm[i]);
-		sample = sample / (1 << 15); // Normalize
-		sum += sample * sample;
-	}
-	return std::sqrt(sum / numberOfSamples);
-}
-
-inline double RMStoDecibel(double rms)
-{
-	return 20 * std::log10(rms) + 20;
-}
-
 double calculatePeakAmplitude(const std::vector<char>& pcm)
 {
 	size_t numberOfSamples = pcm.size() / sizeof(short);
@@ -85,7 +68,7 @@ double calculatePeakAmplitude(const std::vector<char>& pcm)
 
 const unsigned int SAMPLING_RATE = 32000; // 32kHz
 const Channels CHANNELS = MONO;
-const unsigned int TIMEOUT_IN_SECONDS = 30;
+const unsigned int TIMEOUT_IN_SECONDS = 60;
 
 double evaluateAmplitude(const std::list<double>& amplitudes)
 {
@@ -96,7 +79,7 @@ double evaluateAmplitude(const std::list<double>& amplitudes)
 
 double evaluateMicVolume(const std::list<double>& amplitudes)
 {
-	double favorNewFactor = 0.3;
+	double favorNewFactor = 0.2;
 	double volume = 0;
 	for (auto& amp : amplitudes) {
 		volume = (1 - favorNewFactor) * volume + favorNewFactor * amp;
@@ -129,7 +112,6 @@ void doit()
 	// AGC
 	agc::WeightedEvaluator<double, double> amplitudeEvaluator(5, &evaluateAmplitude);
 	agc::WeightedEvaluator<double, double> microphoneVolumeEvaluator(20, &evaluateMicVolume);
-
 	agc::Com com;
 	agc::MicrophoneController micController;
 
@@ -142,10 +124,10 @@ void doit()
 			double peakAmplitude = calculatePeakAmplitude(pcm);
 			double amplitudeEvaluation = amplitudeEvaluator.addValue(peakAmplitude);
 			double micVolumeEvaluation = microphoneVolumeEvaluator.addValue(amplitudeEvaluation);
-			printf("%.2f%%\t%.2f\t%.2f", peakAmplitude * 100, amplitudeEvaluation * 100, micVolumeEvaluation * 100);
+			printf("%.2f%%", peakAmplitude * 100);
 
 			double currentMicVolume = micController.getVolume();
-			if (micVolumeEvaluation < currentMicVolume) {
+			if (micVolumeEvaluation < currentMicVolume - 0.1) {
 				printf("\t\t%.2f -> %.2f", currentMicVolume, micVolumeEvaluation);
 				micController.setVolume(static_cast<float>(micVolumeEvaluation));
 				currentMicVolume = micVolumeEvaluation;
