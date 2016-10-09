@@ -19,13 +19,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Com.h" />
+    <ClInclude Include="AutomaticGainControl.h" />
+    <ClInclude Include="COM.h" />
     <ClInclude Include="MicrophoneController.h" />
+    <ClInclude Include="PCM.h" />
     <ClInclude Include="WeightedEvaluator.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Com.cpp" />
+    <ClCompile Include="AutomaticGainControl.cpp" />
+    <ClCompile Include="COM.cpp" />
     <ClCompile Include="MicrophoneController.cpp" />
+    <ClCompile Include="PCM.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C8BAC891-9B13-4ED4-9D38-64A6126FFDB9}</ProjectGuid>

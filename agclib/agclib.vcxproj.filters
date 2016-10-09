@@ -4,9 +4,13 @@
     <ClInclude Include="WeightedEvaluator.h" />
     <ClInclude Include="MicrophoneController.h" />
     <ClInclude Include="Com.h" />
+    <ClInclude Include="AutomaticGainControl.h" />
+    <ClInclude Include="PCM.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MicrophoneController.cpp" />
     <ClCompile Include="Com.cpp" />
+    <ClCompile Include="AutomaticGainControl.cpp" />
+    <ClCompile Include="PCM.cpp" />
   </ItemGroup>
 </Project>

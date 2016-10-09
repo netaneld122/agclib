@@ -11,8 +11,9 @@
 #include <cmath>
 #include <algorithm>
 
-#include "Com.h"
-#include "WeightedEvaluator.h"
+#include "COM.h"
+#include "PCM.h"
+#include "AutomaticGainControl.h"
 #include "MicrophoneController.h"
 
 enum Channels
@@ -53,41 +54,9 @@ void mmcheck(MMRESULT result)
 	}
 }
 
-double calculatePeakAmplitude(const std::vector<char>& pcm)
-{
-	size_t numberOfSamples = pcm.size() / sizeof(short);
-	double peak = 0;
-	for (size_t i = 0; i < numberOfSamples; i += sizeof(short)) {
-		short sample = std::abs(*reinterpret_cast<const short*>(&pcm[i]));
-		if (peak < sample) {
-			peak = sample;
-		}
-	}
-	return peak / (1 << 15); // Normalize to 0-1 scale
-}
-
 const unsigned int SAMPLING_RATE = 32000; // 32kHz
 const Channels CHANNELS = MONO;
 const unsigned int TIMEOUT_IN_SECONDS = 60;
-
-double evaluateAmplitude(const std::list<double>& amplitudes)
-{
-	double sum = std::accumulate(amplitudes.begin(), amplitudes.end(), static_cast<double>(0));
-	double average = sum / amplitudes.size();
-	return average;
-}
-
-double evaluateMicVolume(const std::list<double>& amplitudes)
-{
-	double favorNewFactor = 0.2;
-	double volume = 0;
-	for (auto& amp : amplitudes) {
-		volume = (1 - favorNewFactor) * volume + favorNewFactor * amp;
-	}
-	
-	// Microphone volume should be the amplitude inverse to compensate
-	return 1 - volume;
-}
 
 void doit()
 {
@@ -110,8 +79,7 @@ void doit()
 	mmcheck(waveInStart(waveHandle));
 
 	// AGC
-	agc::WeightedEvaluator<double, double> amplitudeEvaluator(5, &evaluateAmplitude);
-	agc::WeightedEvaluator<double, double> microphoneVolumeEvaluator(20, &evaluateMicVolume);
+	agc::AutomaticGainControl agc;
 	agc::Com com;
 	agc::MicrophoneController micController;
 
@@ -121,16 +89,14 @@ void doit()
 		if (waveHeader.dwFlags & WHDR_DONE) {
 
 			// AGC
-			double peakAmplitude = calculatePeakAmplitude(pcm);
-			double amplitudeEvaluation = amplitudeEvaluator.addValue(peakAmplitude);
-			double micVolumeEvaluation = microphoneVolumeEvaluator.addValue(amplitudeEvaluation);
-			printf("%.2f%%", peakAmplitude * 100);
-
+			double peakAmplitude = agc::pcm::calculatePeakAmplitude(pcm);
+			double targetVolume = agc.evaluateMicrophoneTargetVolume(pcm);
 			double currentMicVolume = micController.getVolume();
-			if (micVolumeEvaluation < currentMicVolume - 0.1) {
-				printf("\t\t%.2f -> %.2f", currentMicVolume, micVolumeEvaluation);
-				micController.setVolume(static_cast<float>(micVolumeEvaluation));
-				currentMicVolume = micVolumeEvaluation;
+			printf("%.2f%%", peakAmplitude * 100);
+			if (targetVolume < currentMicVolume - 0.1) {
+				printf("\t\t%.2f -> %.2f", currentMicVolume, targetVolume);
+				micController.setVolume(static_cast<float>(targetVolume));
+				currentMicVolume = targetVolume;
 			}
 			std::cout << std::endl;
 			
