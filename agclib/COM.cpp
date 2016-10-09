@@ -1,4 +1,4 @@
-#include "Com.h"
+#include "COM.h"
 
 namespace agc {
 
