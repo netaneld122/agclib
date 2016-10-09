@@ -1,5 +1,5 @@
 # agclib #
-A C++ Automatic Gain Control library for Windows
+A C++ Automatic Gain Control (agc) library for Windows
 
 Basic usage:
 ```
