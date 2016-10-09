@@ -26,7 +26,6 @@
   <ItemGroup>
     <ClCompile Include="Com.cpp" />
     <ClCompile Include="MicrophoneController.cpp" />
-    <ClCompile Include="WeightedEvaluator.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C8BAC891-9B13-4ED4-9D38-64A6126FFDB9}</ProjectGuid>

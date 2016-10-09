@@ -6,7 +6,6 @@
     <ClInclude Include="Com.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="WeightedEvaluator.cpp" />
     <ClCompile Include="MicrophoneController.cpp" />
     <ClCompile Include="Com.cpp" />
   </ItemGroup>
