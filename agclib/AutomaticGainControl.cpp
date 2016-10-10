@@ -16,9 +16,10 @@ double evaluateAmplitude(const std::list<double>& amplitudes)
 double evaluateMicVolume(const std::list<double>& amplitudes)
 {
 	double favorNewFactor = 0.2;
+	double inputDecreaseFactor = 0.5;
 	double volume = 0;
 	for (auto& amplitude : amplitudes) {
-		volume = (1 - favorNewFactor) * volume + favorNewFactor * amplitude;
+		volume = (1 - favorNewFactor) * volume + favorNewFactor * amplitude * inputDecreaseFactor;
 	}
 
 	// Microphone volume should be the amplitude inverse to compensate
