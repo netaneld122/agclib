@@ -98,7 +98,9 @@ void doit()
 			double targetVolume = agc.evaluateMicrophoneTargetVolume(pcm);
 			double currentMicVolume = micController.getVolume();
 			printf("%.2f%%", peakAmplitude * 100);
-			if (targetVolume < currentMicVolume - 0.1) {
+			
+			// -0.001 is done to deal with precision errors
+			if (targetVolume < currentMicVolume - 0.001) {
 				printf("\t\t%.2f -> %.2f", currentMicVolume, targetVolume);
 				micController.setVolume(static_cast<float>(targetVolume));
 				currentMicVolume = targetVolume;
