@@ -1,0 +1,32 @@
+name: Build
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build ${{ matrix.configuration }} | x64
+        run: >
+          msbuild agclib.sln
+          /p:Configuration=${{ matrix.configuration }}
+          /p:Platform=x64
+          /p:PlatformToolset=v143
+          /p:WindowsTargetPlatformVersion=10.0
+          /p:WarningLevel=4
+          /m
+          /nologo
