@@ -19,7 +19,8 @@ impl ComGuard {
         // SAFETY: CoInitializeEx is safe to call; the only requirement is that
         // CoUninitialize is called the same number of times on the same thread,
         // which Drop guarantees.
-        unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED)? };
+        // HRESULT::ok() maps S_OK/S_FALSE to Ok(()), failure codes to Err.
+        unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).ok()? };
         Ok(Self {
             _not_send: PhantomData,
         })

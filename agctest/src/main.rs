@@ -43,7 +43,7 @@ fn run_agc() -> Result<(), Box<dyn std::error::Error>> {
     let wave_format = WAVEFORMATEX {
         wFormatTag: WAVE_FORMAT_PCM as u16,
         nSamplesPerSec: SAMPLING_RATE,
-        wBitsPerSample: (size_of::<i16>() * 8) as u16,
+        wBitsPerSample: i16::BITS as u16,
         nChannels: CHANNELS,
         nAvgBytesPerSec: SAMPLING_RATE * CHANNELS as u32 * size_of::<i16>() as u32,
         nBlockAlign: CHANNELS * size_of::<i16>() as u16,
@@ -154,6 +154,9 @@ fn run_agc() -> Result<(), Box<dyn std::error::Error>> {
     mmcheck(unsafe { waveInStop(wave_handle) })?;
 
     // Drain the last buffer before unpreparing.
+    // wave_header is heap-allocated and was passed as a raw pointer to the driver,
+    // so the compiler cannot cache dwFlags across iterations even without volatile.
+    #[allow(clippy::while_immutable_condition)]
     while wave_header.dwFlags & WHDR_DONE == 0 {
         thread::sleep(DRAIN_INTERVAL);
     }

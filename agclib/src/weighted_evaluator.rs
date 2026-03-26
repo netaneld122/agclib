@@ -19,6 +19,7 @@ use std::collections::VecDeque;
 pub struct WeightedEvaluator<T, S> {
     capacity: usize,
     history: VecDeque<T>,
+    #[allow(clippy::type_complexity)]
     evaluator: Box<dyn Fn(&VecDeque<T>) -> S>,
 }
 
