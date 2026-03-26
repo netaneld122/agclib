@@ -14,10 +14,10 @@ namespace agc {
 			return sum / history.size();
 		});
 
-		evaluator.addValue(0);	// returns 1
-		evaluator.addValue(10);	// returns 5
-		evaluator.addValue(5);	// returns 5
-		evaluator.addValue(15);	// returns 10
+		evaluator.addValue(0);	// history=[0],       returns 0.0
+		evaluator.addValue(10);	// history=[10,0],    returns 5.0
+		evaluator.addValue(5);	// history=[5,10,0],  returns 5.0
+		evaluator.addValue(15);	// history=[15,5,10], returns 10.0
 */
 template <typename T, typename S>
 class WeightedEvaluator
@@ -52,7 +52,7 @@ WeightedEvaluator<T, S>::WeightedEvaluator(
 	size_t capacity,
 	const std::function<S(const std::list<T>&)>& evaluator)
 	: m_capacity(capacity)
-	, m_history(capacity)
+	, m_history()
 	, m_evaluator(evaluator)
 { }
 

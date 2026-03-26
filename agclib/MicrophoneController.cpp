@@ -25,11 +25,21 @@ MicrophoneController::MicrophoneController()
 
 	// Get default recording endpoint
 	IMMDevice* pEndptDev = NULL;
-	comcheck(deviceEnumerator->GetDefaultAudioEndpoint(eCapture, eConsole, &pEndptDev));
+	try {
+		comcheck(deviceEnumerator->GetDefaultAudioEndpoint(eCapture, eConsole, &pEndptDev));
+	} catch (...) {
+		deviceEnumerator->Release();
+		throw;
+	}
 	deviceEnumerator->Release();
-	
+
 	IAudioEndpointVolume* pAudioEndpointVolume = NULL;
-	comcheck(pEndptDev->Activate(IID_IAudioEndpointVolume, CLSCTX_ALL, NULL, (void**)&pAudioEndpointVolume));
+	try {
+		comcheck(pEndptDev->Activate(IID_IAudioEndpointVolume, CLSCTX_ALL, NULL, (void**)&pAudioEndpointVolume));
+	} catch (...) {
+		pEndptDev->Release();
+		throw;
+	}
 	pEndptDev->Release();
 
 	m_audioEndpointVolume = pAudioEndpointVolume;

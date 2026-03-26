@@ -35,7 +35,7 @@ WAVEFORMATEX getWaveFormat(unsigned int samplingRate, Channels channels)
 	return format;
 }
 
-WAVEHDR getWaveHeader(unsigned int samplingRate, char* buffer, size_t bufferSize)
+WAVEHDR getWaveHeader(char* buffer, size_t bufferSize)
 {
 	WAVEHDR waveHeader = {0};
 	waveHeader.lpData = static_cast<LPSTR>(buffer);
@@ -68,7 +68,7 @@ void doit()
 	// Prepare buffering
 	const unsigned int PCM_BUFFER_SIZE = SAMPLING_RATE * sizeof(short) / 10;
 	std::vector<char> pcm(PCM_BUFFER_SIZE);
-	WAVEHDR waveHeader = getWaveHeader(SAMPLING_RATE, &pcm[0], PCM_BUFFER_SIZE);
+	WAVEHDR waveHeader = getWaveHeader(&pcm[0], PCM_BUFFER_SIZE);
 	mmcheck(waveInPrepareHeader(waveHandle, &waveHeader, sizeof(WAVEHDR)));
 	mmcheck(waveInAddBuffer(waveHandle, &waveHeader, sizeof(WAVEHDR)));
 
@@ -94,18 +94,18 @@ void doit()
 		if (waveHeader.dwFlags & WHDR_DONE) {
 
 			// AGC
-			double peakAmplitude = agc::pcm::calculatePeakAmplitude(pcm);
 			double targetVolume = agc.evaluateMicrophoneTargetVolume(pcm);
 			double currentMicVolume = micController.getVolume();
-			printf("%.2f%%", peakAmplitude * 100);
-			
-			// -0.001 is done to deal with precision errors
+			printf("target=%.2f%%", (1.0 - targetVolume) * 100);
+
 			if (targetVolume < currentMicVolume - 0.001) {
-				printf("\t\t%.2f -> %.2f", currentMicVolume, targetVolume);
+				printf("\t\tDOWN %.2f -> %.2f", currentMicVolume, targetVolume);
 				micController.setVolume(static_cast<float>(targetVolume));
-				currentMicVolume = targetVolume;
+			} else if (targetVolume > currentMicVolume + 0.001) {
+				printf("\t\tUP   %.2f -> %.2f", currentMicVolume, targetVolume);
+				micController.setVolume(static_cast<float>(targetVolume));
 			}
-			std::cout << std::endl;
+			printf("\n");
 			
 			// Prepare buffers again
 			mmcheck(waveInPrepareHeader(waveHandle, &waveHeader, sizeof(WAVEHDR)));
@@ -132,6 +132,11 @@ void doit()
 
 int main(int argc, char* argv[])
 {
-	doit();
+	try {
+		doit();
+	} catch (const std::exception& e) {
+		std::cerr << "Error: " << e.what() << std::endl;
+		return 1;
+	}
 	return ERROR_SUCCESS;
 }

@@ -19,8 +19,8 @@ double evaluateMicVolume(const std::list<double>& amplitudes)
 	double inputDecreaseFactor = 0.5;
 	unsigned int resolution = 10; // On a scale of 0 to 100
 	double volume = 0;
-	for (auto& amplitude : amplitudes) {
-		volume = (1 - favorNewFactor) * volume + favorNewFactor * amplitude * inputDecreaseFactor;
+	for (auto it = amplitudes.rbegin(); it != amplitudes.rend(); ++it) {
+		volume = (1 - favorNewFactor) * volume + favorNewFactor * (*it) * inputDecreaseFactor;
 	}
 
 	// Round the volume to match the resolution
