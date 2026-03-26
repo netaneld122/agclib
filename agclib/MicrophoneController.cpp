@@ -1,58 +1,38 @@
-#pragma once
-
-#include <cassert>
+#include <stdexcept>
 
 #include <mmdeviceapi.h>
 #include <endpointvolume.h>
 
-#include "Com.h"
+#include "COM.h"
 #include "MicrophoneController.h"
 
 namespace agc {
 
-static const IID IID_IAudioEndpointVolume = __uuidof(IAudioEndpointVolume);
-
 MicrophoneController::MicrophoneController()
 {
-	// Get device enumerator
-	IMMDeviceEnumerator* deviceEnumerator = NULL;
+	ComPtr<IMMDeviceEnumerator> deviceEnumerator;
 	comcheck(CoCreateInstance(
 		__uuidof(MMDeviceEnumerator),
 		NULL,
 		CLSCTX_INPROC_SERVER,
 		__uuidof(IMMDeviceEnumerator),
-		reinterpret_cast<LPVOID*>(&deviceEnumerator)));
+		reinterpret_cast<LPVOID*>(deviceEnumerator.put())));
 
-	// Get default recording endpoint
-	IMMDevice* pEndptDev = NULL;
-	try {
-		comcheck(deviceEnumerator->GetDefaultAudioEndpoint(eCapture, eConsole, &pEndptDev));
-	} catch (...) {
-		deviceEnumerator->Release();
-		throw;
-	}
-	deviceEnumerator->Release();
+	ComPtr<IMMDevice> endpointDevice;
+	comcheck(deviceEnumerator->GetDefaultAudioEndpoint(eCapture, eConsole, endpointDevice.put()));
 
-	IAudioEndpointVolume* pAudioEndpointVolume = NULL;
-	try {
-		comcheck(pEndptDev->Activate(IID_IAudioEndpointVolume, CLSCTX_ALL, NULL, (void**)&pAudioEndpointVolume));
-	} catch (...) {
-		pEndptDev->Release();
-		throw;
-	}
-	pEndptDev->Release();
-
-	m_audioEndpointVolume = pAudioEndpointVolume;
-}
-
-MicrophoneController::~MicrophoneController()
-{
-	m_audioEndpointVolume->Release();
+	comcheck(endpointDevice->Activate(
+		__uuidof(IAudioEndpointVolume),
+		CLSCTX_ALL,
+		NULL,
+		reinterpret_cast<void**>(m_audioEndpointVolume.put())));
 }
 
 void MicrophoneController::setVolume(float volume)
 {
-	assert(volume >= 0 && volume <= 1);
+	if (volume < 0.0f || volume > 1.0f) {
+		throw std::invalid_argument("volume must be in the range [0.0, 1.0]");
+	}
 	comcheck(m_audioEndpointVolume->SetMasterVolumeLevelScalar(volume, NULL));
 }
 
