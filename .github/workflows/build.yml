@@ -1,0 +1,46 @@
+name: Build
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        profile: [debug, release]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install stable Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Build (${{ matrix.profile }})
+        run: cargo build ${{ matrix.profile == 'release' && '--release' || '' }} --workspace
+
+      - name: Clippy (${{ matrix.profile }})
+        run: >
+          cargo clippy
+          ${{ matrix.profile == 'release' && '--release' || '' }}
+          --workspace --all-targets
+          -- -D warnings

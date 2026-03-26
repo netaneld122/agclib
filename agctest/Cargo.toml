@@ -1,0 +1,11 @@
+[package]
+name = "agctest"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+agclib = { path = "../agclib" }
+windows = { version = "0.58", features = [
+    "Win32_Media_Audio",
+    "Win32_Media",
+] }

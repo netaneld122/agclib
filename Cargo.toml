@@ -1,0 +1,3 @@
+[workspace]
+members = ["agclib", "agctest"]
+resolver = "2"
