@@ -17,8 +17,7 @@ fn evaluate_mic_volume(amplitudes: &VecDeque<f64>) -> f64 {
     });
 
     // Quantise to the nearest resolution step.
-    let quantised =
-        ((volume * 100.0).round() as u32 / RESOLUTION * RESOLUTION) as f64 / 100.0;
+    let quantised = ((volume * 100.0).round() as u32 / RESOLUTION * RESOLUTION) as f64 / 100.0;
 
     // Target volume is the amplitude inverse.
     1.0 - quantised

@@ -1,8 +1,7 @@
 use windows::Win32::{
     Media::Audio::{
-        eCapture, eConsole,
-        Endpoints::IAudioEndpointVolume,
-        IMMDeviceEnumerator, MMDeviceEnumerator,
+        eCapture, eConsole, Endpoints::IAudioEndpointVolume, IMMDeviceEnumerator,
+        MMDeviceEnumerator,
     },
     System::Com::{CoCreateInstance, CLSCTX_ALL, CLSCTX_INPROC_SERVER},
 };

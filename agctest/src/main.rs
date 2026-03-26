@@ -5,12 +5,12 @@ use std::{
     time::{Duration, Instant},
 };
 
+use windows::core::PSTR;
 use windows::Win32::Media::Audio::{
     waveInAddBuffer, waveInClose, waveInOpen, waveInPrepareHeader, waveInStart, waveInStop,
-    waveInUnprepareHeader, HWAVEIN, WAVEHDR, WAVEFORMATEX, WAVE_FORMAT_DIRECT, WAVE_FORMAT_PCM,
+    waveInUnprepareHeader, HWAVEIN, WAVEFORMATEX, WAVEHDR, WAVE_FORMAT_DIRECT, WAVE_FORMAT_PCM,
     WAVE_MAPPER,
 };
-use windows::core::PSTR;
 
 use agclib::{AutomaticGainControl, ComGuard, MicrophoneController};
 
@@ -79,10 +79,18 @@ fn run_agc() -> Result<(), Box<dyn std::error::Error>> {
     // SAFETY: wave_header and pcm are valid, non-overlapping, and will remain
     // at their current addresses for the duration of the recording session.
     mmcheck(unsafe {
-        waveInPrepareHeader(wave_handle, wave_header.as_mut(), size_of::<WAVEHDR>() as u32)
+        waveInPrepareHeader(
+            wave_handle,
+            wave_header.as_mut(),
+            size_of::<WAVEHDR>() as u32,
+        )
     })?;
     mmcheck(unsafe {
-        waveInAddBuffer(wave_handle, wave_header.as_mut(), size_of::<WAVEHDR>() as u32)
+        waveInAddBuffer(
+            wave_handle,
+            wave_header.as_mut(),
+            size_of::<WAVEHDR>() as u32,
+        )
     })?;
 
     println!("Press <enter> to start recording...");
@@ -121,10 +129,18 @@ fn run_agc() -> Result<(), Box<dyn std::error::Error>> {
 
             // SAFETY: same as initial prepare/add calls above.
             mmcheck(unsafe {
-                waveInPrepareHeader(wave_handle, wave_header.as_mut(), size_of::<WAVEHDR>() as u32)
+                waveInPrepareHeader(
+                    wave_handle,
+                    wave_header.as_mut(),
+                    size_of::<WAVEHDR>() as u32,
+                )
             })?;
             mmcheck(unsafe {
-                waveInAddBuffer(wave_handle, wave_header.as_mut(), size_of::<WAVEHDR>() as u32)
+                waveInAddBuffer(
+                    wave_handle,
+                    wave_header.as_mut(),
+                    size_of::<WAVEHDR>() as u32,
+                )
             })?;
         }
         thread::sleep(POLL_INTERVAL);
@@ -144,7 +160,11 @@ fn run_agc() -> Result<(), Box<dyn std::error::Error>> {
 
     // SAFETY: wave_header is the same buffer that was prepared above.
     mmcheck(unsafe {
-        waveInUnprepareHeader(wave_handle, wave_header.as_mut(), size_of::<WAVEHDR>() as u32)
+        waveInUnprepareHeader(
+            wave_handle,
+            wave_header.as_mut(),
+            size_of::<WAVEHDR>() as u32,
+        )
     })?;
     mmcheck(unsafe { waveInClose(wave_handle) })?;
 
